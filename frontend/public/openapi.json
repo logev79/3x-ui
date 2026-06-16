@@ -138,6 +138,46 @@
             "minimum": 1,
             "type": "integer"
           },
+          "smtpCpu": {
+            "description": "CPU threshold for email notifications",
+            "maximum": 100,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "smtpEnable": {
+            "description": "Email (SMTP) notification settings\nEnable email notifications",
+            "type": "boolean"
+          },
+          "smtpEnabledEvents": {
+            "description": "Comma-separated event types to send via email",
+            "type": "string"
+          },
+          "smtpEncryptionType": {
+            "description": "SMTP encryption: none, starttls, tls",
+            "type": "string"
+          },
+          "smtpHost": {
+            "description": "SMTP server host",
+            "type": "string"
+          },
+          "smtpPassword": {
+            "description": "SMTP password",
+            "type": "string"
+          },
+          "smtpPort": {
+            "description": "SMTP server port",
+            "maximum": 65535,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "smtpTo": {
+            "description": "Comma-separated recipient emails",
+            "type": "string"
+          },
+          "smtpUsername": {
+            "description": "SMTP username",
+            "type": "string"
+          },
           "subAnnounce": {
             "description": "Subscription announce",
             "type": "string"
@@ -277,10 +317,6 @@
             "description": "Telegram bot settings\nEnable Telegram bot notifications",
             "type": "boolean"
           },
-          "tgBotLoginNotify": {
-            "description": "Send login notifications",
-            "type": "boolean"
-          },
           "tgBotProxy": {
             "description": "Proxy URL for Telegram bot",
             "type": "string"
@@ -294,6 +330,10 @@
             "maximum": 100,
             "minimum": 0,
             "type": "integer"
+          },
+          "tgEnabledEvents": {
+            "description": "Comma-separated event types to send via Telegram",
+            "type": "string"
           },
           "tgLang": {
             "description": "Telegram bot language",
@@ -387,6 +427,15 @@
           "remarkModel",
           "restartXrayOnClientDisable",
           "sessionMaxAge",
+          "smtpCpu",
+          "smtpEnable",
+          "smtpEnabledEvents",
+          "smtpEncryptionType",
+          "smtpHost",
+          "smtpPassword",
+          "smtpPort",
+          "smtpTo",
+          "smtpUsername",
           "subAnnounce",
           "subCertFile",
           "subClashEnable",
@@ -421,10 +470,10 @@
           "tgBotBackup",
           "tgBotChatId",
           "tgBotEnable",
-          "tgBotLoginNotify",
           "tgBotProxy",
           "tgBotToken",
           "tgCpu",
+          "tgEnabledEvents",
           "tgLang",
           "tgRunTime",
           "timeLocation",
@@ -469,6 +518,9 @@
             "type": "boolean"
           },
           "hasNordSecret": {
+            "type": "boolean"
+          },
+          "hasSmtpPassword": {
             "type": "boolean"
           },
           "hasTgBotToken": {
@@ -572,6 +624,46 @@
             "minimum": 1,
             "type": "integer"
           },
+          "smtpCpu": {
+            "description": "CPU threshold for email notifications",
+            "maximum": 100,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "smtpEnable": {
+            "description": "Email (SMTP) notification settings\nEnable email notifications",
+            "type": "boolean"
+          },
+          "smtpEnabledEvents": {
+            "description": "Comma-separated event types to send via email",
+            "type": "string"
+          },
+          "smtpEncryptionType": {
+            "description": "SMTP encryption: none, starttls, tls",
+            "type": "string"
+          },
+          "smtpHost": {
+            "description": "SMTP server host",
+            "type": "string"
+          },
+          "smtpPassword": {
+            "description": "SMTP password",
+            "type": "string"
+          },
+          "smtpPort": {
+            "description": "SMTP server port",
+            "maximum": 65535,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "smtpTo": {
+            "description": "Comma-separated recipient emails",
+            "type": "string"
+          },
+          "smtpUsername": {
+            "description": "SMTP username",
+            "type": "string"
+          },
           "subAnnounce": {
             "description": "Subscription announce",
             "type": "string"
@@ -711,10 +803,6 @@
             "description": "Telegram bot settings\nEnable Telegram bot notifications",
             "type": "boolean"
           },
-          "tgBotLoginNotify": {
-            "description": "Send login notifications",
-            "type": "boolean"
-          },
           "tgBotProxy": {
             "description": "Proxy URL for Telegram bot",
             "type": "string"
@@ -728,6 +816,10 @@
             "maximum": 100,
             "minimum": 0,
             "type": "integer"
+          },
+          "tgEnabledEvents": {
+            "description": "Comma-separated event types to send via Telegram",
+            "type": "string"
           },
           "tgLang": {
             "description": "Telegram bot language",
@@ -799,6 +891,7 @@
           "hasApiToken",
           "hasLdapPassword",
           "hasNordSecret",
+          "hasSmtpPassword",
           "hasTgBotToken",
           "hasTwoFactorToken",
           "hasWarpSecret",
@@ -827,6 +920,15 @@
           "remarkModel",
           "restartXrayOnClientDisable",
           "sessionMaxAge",
+          "smtpCpu",
+          "smtpEnable",
+          "smtpEnabledEvents",
+          "smtpEncryptionType",
+          "smtpHost",
+          "smtpPassword",
+          "smtpPort",
+          "smtpTo",
+          "smtpUsername",
           "subAnnounce",
           "subCertFile",
           "subClashEnable",
@@ -861,10 +963,10 @@
           "tgBotBackup",
           "tgBotChatId",
           "tgBotEnable",
-          "tgBotLoginNotify",
           "tgBotProxy",
           "tgBotToken",
           "tgCpu",
+          "tgEnabledEvents",
           "tgLang",
           "tgRunTime",
           "timeLocation",
@@ -1617,9 +1719,20 @@
             "example": "de-fra-1",
             "type": "string"
           },
+          "netDown": {
+            "example": 2097152,
+            "type": "integer"
+          },
+          "netUp": {
+            "example": 1048576,
+            "type": "integer"
+          },
           "onlineCount": {
             "example": 3,
             "type": "integer"
+          },
+          "outboundTag": {
+            "type": "string"
           },
           "panelVersion": {
             "example": "v3.x.x",
@@ -1658,7 +1771,8 @@
             "enum": [
               "verify",
               "skip",
-              "pin"
+              "pin",
+              "mtls"
             ],
             "type": "string"
           },
@@ -1707,7 +1821,10 @@
           "latencyMs",
           "memPct",
           "name",
+          "netDown",
+          "netUp",
           "onlineCount",
+          "outboundTag",
           "panelVersion",
           "pinnedCertSha256",
           "port",
@@ -4390,7 +4507,7 @@
         "tags": [
           "Clients"
         ],
-        "summary": "Fetch one client by email, including the inbound IDs it is attached to.",
+        "summary": "Fetch one client by email, including the inbound IDs and external config IDs it is attached to.",
         "operationId": "get_panel_api_clients_get_email",
         "parameters": [
           {
@@ -4688,6 +4805,74 @@
               "example": {
                 "inboundIds": [
                   5
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                },
+                "example": {
+                  "success": true
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/clients/{email}/externalLinks": {
+      "post": {
+        "tags": [
+          "Clients"
+        ],
+        "summary": "Replace a client's external links (per-client share links and remote subscription URLs surfaced in their subscription). Sends the full set; the server replaces all rows.",
+        "operationId": "post_panel_api_clients_email_externalLinks",
+        "parameters": [
+          {
+            "name": "email",
+            "in": "path",
+            "required": true,
+            "description": "Client email (unique identifier).",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              },
+              "example": {
+                "externalLinks": [
+                  {
+                    "kind": "link",
+                    "value": "vless://uuid@host:443?...#srv",
+                    "remark": "DE"
+                  },
+                  {
+                    "kind": "subscription",
+                    "value": "https://provider.example/sub/abc",
+                    "remark": "Provider"
+                  }
                 ]
               }
             }
@@ -5762,6 +5947,49 @@
         }
       }
     },
+    "/panel/api/clients/clientIpsByGuid": {
+      "post": {
+        "tags": [
+          "Clients"
+        ],
+        "summary": "Per-client source IPs grouped by the panelGuid of the node that observed them. Lets the central panel attribute and enforce per-client IP limits using the real visitor IPs each node sees, instead of the address of the intermediate panel it syncs through.",
+        "operationId": "post_panel_api_clients_clientIpsByGuid",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "obj": {
+                    "a1b2-...": {
+                      "user1": [
+                        {
+                          "ip": "1.2.3.4",
+                          "timestamp": 1700000000
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/panel/api/clients/activeInbounds": {
       "post": {
         "tags": [
@@ -6049,7 +6277,10 @@
                       "latencyMs": 42,
                       "memPct": 45.1,
                       "name": "de-fra-1",
+                      "netDown": 2097152,
+                      "netUp": 1048576,
                       "onlineCount": 3,
+                      "outboundTag": "",
                       "panelVersion": "v3.x.x",
                       "parentGuid": "",
                       "pinnedCertSha256": "",
@@ -6066,6 +6297,85 @@
                       "xrayVersion": "25.10.31"
                     }
                   ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/nodes/mtls/ca": {
+      "post": {
+        "tags": [
+          "Nodes"
+        ],
+        "summary": "This panel's node-auth CA certificate (public, PEM) to paste into a node's mTLS trust setting. Lazily mints the CA and the master client cert on first call. Pair with setting tlsVerifyMode=mtls on the node.",
+        "operationId": "post_panel_api_nodes_mtls_ca",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "obj": {
+                    "caCert": "-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----\n"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/nodes/mtls/trustCA": {
+      "post": {
+        "tags": [
+          "Nodes"
+        ],
+        "summary": "Set the CA certificate this panel trusts for incoming node-API client certificates (this panel acting as a node). Paste the managing panel's CA (from nodes/mtls/ca). An empty caCert disables it. A non-empty value must be a PEM certificate. Applied on the next panel restart.",
+        "operationId": "post_panel_api_nodes_mtls_trustCA",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              },
+              "example": {
+                "caCert": "-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----\n"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
                 }
               }
             }
@@ -6929,6 +7239,75 @@
                     },
                     "obj": {}
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/setting/testSmtp": {
+      "post": {
+        "tags": [
+          "Settings"
+        ],
+        "summary": "Test SMTP connection with stage-by-stage reporting (connect, auth, send). Returns structured result with stage and message.",
+        "operationId": "post_panel_api_setting_testSmtp",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "stage": "send",
+                  "msg": "Test email sent successfully"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/setting/testTgBot": {
+      "post": {
+        "tags": [
+          "Settings"
+        ],
+        "summary": "Test Telegram bot connection by sending a test message to the configured chat.",
+        "operationId": "post_panel_api_setting_testTgBot",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "msg": "Test message sent to Telegram"
                 }
               }
             }

@@ -225,6 +225,49 @@ func jsonStringFieldFromRaw(r json.RawMessage) string {
 	return string(trimmed)
 }
 
+// StripInboundXhttpClientFields removes xHTTP knobs that belong on the
+// client dialer and subscription share-link extras only. xray-core's XHTTP
+// inbound listener does not consume them; the panel still stores them on
+// the inbound row so buildXhttpExtra can push defaults to clients.
+func StripInboundXhttpClientFields(streamSettings string) (string, bool) {
+	if streamSettings == "" {
+		return streamSettings, false
+	}
+	var stream map[string]any
+	if err := json.Unmarshal([]byte(streamSettings), &stream); err != nil {
+		return streamSettings, false
+	}
+	if stream["network"] != "xhttp" {
+		return streamSettings, false
+	}
+	xhttp, ok := stream["xhttpSettings"].(map[string]any)
+	if !ok || len(xhttp) == 0 {
+		return streamSettings, false
+	}
+	clientOnly := []string{
+		"xmux",
+		"downloadSettings",
+		"scMinPostsIntervalMs",
+		"uplinkChunkSize",
+		"noGRPCHeader",
+	}
+	changed := false
+	for _, key := range clientOnly {
+		if _, has := xhttp[key]; has {
+			delete(xhttp, key)
+			changed = true
+		}
+	}
+	if !changed {
+		return streamSettings, false
+	}
+	out, err := json.MarshalIndent(stream, "", "  ")
+	if err != nil {
+		return streamSettings, false
+	}
+	return string(out), true
+}
+
 // GenXrayInboundConfig generates an Xray inbound configuration from the Inbound model.
 func (i *Inbound) GenXrayInboundConfig() *xray.InboundConfig {
 	listen := i.Listen
@@ -248,12 +291,16 @@ func (i *Inbound) GenXrayInboundConfig() *xray.InboundConfig {
 			settings = stripped
 		}
 	}
+	streamSettings := i.StreamSettings
+	if stripped, ok := StripInboundXhttpClientFields(streamSettings); ok {
+		streamSettings = stripped
+	}
 	return &xray.InboundConfig{
 		Listen:         json_util.RawMessage(listen),
 		Port:           i.Port,
 		Protocol:       protocol,
 		Settings:       json_util.RawMessage(settings),
-		StreamSettings: json_util.RawMessage(i.StreamSettings),
+		StreamSettings: json_util.RawMessage(streamSettings),
 		Tag:            i.Tag,
 		Sniffing:       json_util.RawMessage(i.Sniffing),
 	}
@@ -455,13 +502,14 @@ type Node struct {
 	Address             string   `json:"address" form:"address" validate:"required" example:"node1.example.com"`
 	Port                int      `json:"port" form:"port" validate:"gte=1,lte=65535" example:"2053"`
 	BasePath            string   `json:"basePath" form:"basePath" example:"/"`
-	ApiToken            string   `json:"apiToken" form:"apiToken" validate:"required" example:"abcdef0123456789"`
+	ApiToken            string   `json:"apiToken" form:"apiToken" validate:"required_unless=TlsVerifyMode mtls" example:"abcdef0123456789"`
 	Enable              bool     `json:"enable" form:"enable" gorm:"default:true" example:"true"`
 	AllowPrivateAddress bool     `json:"allowPrivateAddress" form:"allowPrivateAddress" gorm:"default:false"`
-	TlsVerifyMode       string   `json:"tlsVerifyMode" form:"tlsVerifyMode" gorm:"column:tls_verify_mode;default:verify" validate:"omitempty,oneof=verify skip pin"`
+	TlsVerifyMode       string   `json:"tlsVerifyMode" form:"tlsVerifyMode" gorm:"column:tls_verify_mode;default:verify" validate:"omitempty,oneof=verify skip pin mtls"`
 	PinnedCertSha256    string   `json:"pinnedCertSha256" form:"pinnedCertSha256" gorm:"column:pinned_cert_sha256"`
 	InboundSyncMode     string   `json:"inboundSyncMode" form:"inboundSyncMode" gorm:"column:inbound_sync_mode;default:all" validate:"omitempty,oneof=all selected"`
 	InboundTags         []string `json:"inboundTags" form:"inboundTags" gorm:"serializer:json;column:inbound_tags"`
+	OutboundTag         string   `json:"outboundTag" form:"outboundTag" gorm:"column:outbound_tag"`
 
 	// Guid is the remote panel's stable self-identifier (its panelGuid),
 	// learned from each heartbeat. It is the globally stable node identity used
@@ -481,6 +529,8 @@ type Node struct {
 	CpuPct        float64 `json:"cpuPct" example:"23.5"`
 	MemPct        float64 `json:"memPct" example:"45.1"`
 	UptimeSecs    uint64  `json:"uptimeSecs" example:"86400"`
+	NetUp         uint64  `json:"netUp" gorm:"column:net_up" example:"1048576"`
+	NetDown       uint64  `json:"netDown" gorm:"column:net_down" example:"2097152"`
 	LastError     string  `json:"lastError"`
 
 	// XrayState and XrayError are captured from the remote node's /panel/api/server/status
@@ -571,7 +621,7 @@ type ClientRecord struct {
 	ExpiryTime int64  `json:"expiryTime" gorm:"column:expiry_time"`
 	Enable     bool   `json:"enable" gorm:"default:true"`
 	TgID       int64  `json:"tgId" gorm:"column:tg_id"`
-	Group      string `json:"group" gorm:"column:group_name;default:''"`
+	Group      string `json:"group" gorm:"column:group_name;default:'';index:idx_client_record_group"`
 	Comment    string `json:"comment"`
 	Reset      int    `json:"reset" gorm:"default:0"`
 	CreatedAt  int64  `json:"createdAt" gorm:"autoCreateTime:milli"`
@@ -628,6 +678,31 @@ type ClientInbound struct {
 }
 
 func (ClientInbound) TableName() string { return "client_inbounds" }
+
+// ClientExternalLink is a per-client entry surfaced in the client's
+// subscription. Two kinds:
+//   - "link": a single third-party share link (vless://, vmess://, trojan://,
+//     ss://, hysteria2://, wireguard://). Emitted verbatim in raw subs; parsed
+//     into an outbound/proxy for JSON and Clash.
+//   - "subscription": a remote subscription URL. The panel fetches it (cached),
+//     decodes its links, and merges them into the client's subscription.
+type ClientExternalLink struct {
+	Id        int    `json:"id" gorm:"primaryKey;autoIncrement"`
+	ClientId  int    `json:"clientId" gorm:"index;column:client_id"`
+	Kind      string `json:"kind" gorm:"column:kind"`
+	Value     string `json:"value" gorm:"column:value"`
+	Remark    string `json:"remark" gorm:"column:remark"`
+	SortIndex int    `json:"sortIndex" gorm:"column:sort_index"`
+	CreatedAt int64  `json:"createdAt" gorm:"autoCreateTime:milli"`
+}
+
+func (ClientExternalLink) TableName() string { return "client_external_links" }
+
+// External link kinds.
+const (
+	ExternalLinkKindLink         = "link"
+	ExternalLinkKindSubscription = "subscription"
+)
 
 type InboundFallback struct {
 	Id        int    `json:"id" gorm:"primaryKey;autoIncrement"`

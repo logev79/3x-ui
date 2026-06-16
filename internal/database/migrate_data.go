@@ -47,8 +47,10 @@ func migrationModels() []any {
 		&model.InboundClientIps{},
 		&model.ClientRecord{},
 		&model.ClientInbound{},
+		&model.ClientExternalLink{},
 		&model.InboundFallback{},
 		&model.NodeClientTraffic{},
+		&model.NodeClientIp{},
 		&model.OutboundSubscription{},
 	}
 }
