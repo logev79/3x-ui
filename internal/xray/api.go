@@ -123,8 +123,16 @@ func (x *XrayAPI) Close() {
 	x.isConnected = false
 }
 
+// handlerRPCTimeout bounds per-call gRPC handler operations (add/remove inbound,
+// alter user) so a hung core connection cannot block the caller indefinitely —
+// for example while the process restart lock is held.
+const handlerRPCTimeout = 10 * time.Second
+
 // AddInbound adds a new inbound configuration to the Xray core via gRPC.
 func (x *XrayAPI) AddInbound(inbound []byte) error {
+	if x.HandlerServiceClient == nil {
+		return common.NewError("xray HandlerServiceClient is not initialized")
+	}
 	client := *x.HandlerServiceClient
 
 	conf := new(conf.InboundDetourConfig)
@@ -140,15 +148,22 @@ func (x *XrayAPI) AddInbound(inbound []byte) error {
 	}
 	inboundConfig := command.AddInboundRequest{Inbound: config}
 
-	_, err = client.AddInbound(context.Background(), &inboundConfig)
+	ctx, cancel := context.WithTimeout(context.Background(), handlerRPCTimeout)
+	defer cancel()
+	_, err = client.AddInbound(ctx, &inboundConfig)
 
 	return err
 }
 
 // DelInbound removes an inbound configuration from the Xray core by tag.
 func (x *XrayAPI) DelInbound(tag string) error {
+	if x.HandlerServiceClient == nil {
+		return common.NewError("xray HandlerServiceClient is not initialized")
+	}
 	client := *x.HandlerServiceClient
-	_, err := client.RemoveInbound(context.Background(), &command.RemoveInboundRequest{
+	ctx, cancel := context.WithTimeout(context.Background(), handlerRPCTimeout)
+	defer cancel()
+	_, err := client.RemoveInbound(ctx, &command.RemoveInboundRequest{
 		Tag: tag,
 	})
 	return err
@@ -505,9 +520,14 @@ func (x *XrayAPI) AddUser(Protocol string, inboundTag string, user map[string]an
 		return nil
 	}
 
+	if x.HandlerServiceClient == nil {
+		return common.NewError("xray HandlerServiceClient is not initialized")
+	}
 	client := *x.HandlerServiceClient
 
-	_, err = client.AlterInbound(context.Background(), &command.AlterInboundRequest{
+	ctx, cancel := context.WithTimeout(context.Background(), handlerRPCTimeout)
+	defer cancel()
+	_, err = client.AlterInbound(ctx, &command.AlterInboundRequest{
 		Tag: inboundTag,
 		Operation: serial.ToTypedMessage(&command.AddUserOperation{
 			User: &protocol.User{
@@ -574,6 +594,19 @@ func (x *XrayAPI) GetTraffic() ([]*Traffic, []*ClientTraffic, error) {
 			processClientTraffic(matches, value, emailTrafficMap)
 		}
 	}
+
+	// Drop delta baselines for stats that no longer exist (deleted inbounds or
+	// clients), which otherwise linger until the next Xray restart. Only rebuild
+	// when the map has drifted past 2x the live set, so the steady-state hot path
+	// stays allocation-free.
+	if n := len(resp.GetStat()); n > 0 && len(x.StatsLastValues) > 2*n {
+		pruned := make(map[string]int64, n)
+		for _, stat := range resp.GetStat() {
+			pruned[stat.Name] = x.StatsLastValues[stat.Name]
+		}
+		x.StatsLastValues = pruned
+	}
+
 	return mapToSlice(tagTrafficMap), mapToSlice(emailTrafficMap), nil
 }
 

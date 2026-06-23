@@ -35,6 +35,7 @@ export const EXAMPLES: Record<string, unknown> = {
     "smtpEnabledEvents": "",
     "smtpEncryptionType": "",
     "smtpHost": "",
+    "smtpMemory": 0,
     "smtpPassword": "",
     "smtpPort": 1,
     "smtpTo": "",
@@ -50,6 +51,7 @@ export const EXAMPLES: Record<string, unknown> = {
     "subEnable": false,
     "subEnableRouting": false,
     "subEncrypt": false,
+    "subHideSettings": false,
     "subJsonEnable": false,
     "subJsonFinalMask": "",
     "subJsonMux": "",
@@ -76,6 +78,7 @@ export const EXAMPLES: Record<string, unknown> = {
     "tgCpu": 0,
     "tgEnabledEvents": "",
     "tgLang": "",
+    "tgMemory": 0,
     "tgRunTime": "",
     "timeLocation": "",
     "trafficDiff": 0,
@@ -132,6 +135,7 @@ export const EXAMPLES: Record<string, unknown> = {
     "smtpEnabledEvents": "",
     "smtpEncryptionType": "",
     "smtpHost": "",
+    "smtpMemory": 0,
     "smtpPassword": "",
     "smtpPort": 1,
     "smtpTo": "",
@@ -147,6 +151,7 @@ export const EXAMPLES: Record<string, unknown> = {
     "subEnable": false,
     "subEnableRouting": false,
     "subEncrypt": false,
+    "subHideSettings": false,
     "subJsonEnable": false,
     "subJsonFinalMask": "",
     "subJsonMux": "",
@@ -173,6 +178,7 @@ export const EXAMPLES: Record<string, unknown> = {
     "tgCpu": 0,
     "tgEnabledEvents": "",
     "tgLang": "",
+    "tgMemory": 0,
     "tgRunTime": "",
     "timeLocation": "",
     "trafficDiff": 0,
@@ -315,7 +321,7 @@ export const EXAMPLES: Record<string, unknown> = {
       ""
     ],
     "updatedAt": 0,
-    "verifyPeerCertByName": false,
+    "verifyPeerCertByName": "",
     "vlessRoute": ""
   },
   "Inbound": {
@@ -390,6 +396,7 @@ export const EXAMPLES: Record<string, unknown> = {
     "success": false
   },
   "Node": {
+    "activeCount": 23,
     "address": "node1.example.com",
     "allowPrivateAddress": false,
     "apiToken": "abcdef0123456789",
@@ -400,6 +407,7 @@ export const EXAMPLES: Record<string, unknown> = {
     "cpuPct": 23.5,
     "createdAt": 1700000000,
     "depletedCount": 1,
+    "disabledCount": 3,
     "enable": true,
     "guid": "",
     "id": 1,
