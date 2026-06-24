@@ -285,8 +285,12 @@ export default function InboundFormModal({
   ) => {
     if (block?.id === authId) return true;
     const label = (block?.label || '').toLowerCase().replace(/[-_\s]/g, '');
-    if (authId === 'mlkem768') return label.includes('mlkem768');
-    if (authId === 'x25519') return label.includes('x25519');
+    if (authId === 'mlkem768') return label.includes('mlkem768') && !label.includes('xorpub') && !label.includes('random');
+    if (authId === 'x25519') return label.includes('x25519') && !label.includes('xorpub') && !label.includes('random');
+    if (authId === 'mlkem768_xorpub') return label.includes('mlkem768') && label.includes('xorpub');
+    if (authId === 'mlkem768_random') return label.includes('mlkem768') && label.includes('random');
+    if (authId === 'x25519_xorpub') return label.includes('x25519') && label.includes('xorpub');
+    if (authId === 'x25519_random') return label.includes('x25519') && label.includes('random');
     return false;
   };
 
@@ -319,7 +323,19 @@ export default function InboundFormModal({
     const parts = enc.split('.').filter(Boolean);
     const authKey = parts[parts.length - 1] || '';
     if (!authKey) return t('pages.inbounds.vlessAuthCustom');
-    return authKey.length > 300
+    const mode = parts[1] || 'native';
+    const keyType = authKey.length > 300 ? 'mlkem768' : 'x25519';
+    if (mode === 'xorpub') {
+      return keyType === 'mlkem768'
+        ? t('pages.inbounds.vlessAuthMlkem768Xorpub')
+        : t('pages.inbounds.vlessAuthX25519Xorpub');
+    }
+    if (mode === 'random') {
+      return keyType === 'mlkem768'
+        ? t('pages.inbounds.vlessAuthMlkem768Random')
+        : t('pages.inbounds.vlessAuthX25519Random');
+    }
+    return keyType === 'mlkem768'
       ? t('pages.inbounds.vlessAuthMlkem768')
       : t('pages.inbounds.vlessAuthX25519');
   })();
@@ -708,7 +724,7 @@ export default function InboundFormModal({
   // etc., not empty strings).
   // Seed each network's settings blob with its Zod schema defaults so
   // every Form.Item inside the network sub-form has a defined starting
-  // value. XHTTP in particular has ~20 fields (sessionPlacement,
+  // value. XHTTP in particular has ~20 fields (sessionIDPlacement,
   // seqPlacement, xPaddingMethod, uplinkHTTPMethod, ...) whose value
   // is the literal "" sentinel meaning "let xray-core pick its
   // default". Without seeding "", the Form.Item reads `undefined` and

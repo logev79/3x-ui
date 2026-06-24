@@ -175,6 +175,29 @@ describe('outbound-form-adapter: round-trip', () => {
     });
   });
 
+  it('http preserves top-level settings.headers across wire → form → wire (#5519)', () => {
+    const headers = { 'X-T5-Auth': '683556433', Host: '153.3.236.22:443' };
+    const form = rawOutboundToFormValues({
+      protocol: 'http',
+      tag: 'h',
+      settings: { servers: [{ address: 'a', port: 443, users: [] }], headers },
+    });
+    expect(form.protocol).toBe('http');
+    if (form.protocol === 'http') {
+      expect(form.settings.headers).toEqual(headers);
+    }
+    const back = formValuesToWirePayload(form);
+    expect(back.settings).toMatchObject({ headers });
+  });
+
+  it('http omits headers when empty', () => {
+    const back = formValuesToWirePayload(rawOutboundToFormValues({
+      protocol: 'http',
+      settings: { servers: [{ address: 'a', port: 8080, users: [] }] },
+    }));
+    expect(back.settings).not.toHaveProperty('headers');
+  });
+
   it('wireguard csv-joins address and reserved on read, splits on write', () => {
     const wire = {
       protocol: 'wireguard',
@@ -182,7 +205,6 @@ describe('outbound-form-adapter: round-trip', () => {
         mtu: 1420,
         secretKey: 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=',
         address: ['10.0.0.1', 'fd00::1'],
-        workers: 2,
         peers: [{ publicKey: 'pk', allowedIPs: ['0.0.0.0/0'], endpoint: 'e:51820', preSharedKey: 'psk' }],
         reserved: [1, 2, 3],
         noKernelTun: false,

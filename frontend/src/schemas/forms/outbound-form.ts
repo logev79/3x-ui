@@ -80,6 +80,7 @@ export const HttpOutboundFormSettingsSchema = z.object({
   port: PortSchema.default(8080),
   user: z.string().default(''),
   pass: z.string().default(''),
+  headers: z.record(z.string(), z.string()).default({}),
 });
 export type HttpOutboundFormSettings = z.infer<typeof HttpOutboundFormSettingsSchema>;
 
@@ -103,7 +104,6 @@ export const WireguardOutboundFormSettingsSchema = z.object({
   secretKey: z.string().default(''),
   pubKey: z.string().default(''),
   address: z.string().default(''),
-  workers: z.number().int().min(0).default(2),
   domainStrategy: z.union([WireguardDomainStrategySchema, z.literal('')]).default(''),
   reserved: z.string().default(''),
   peers: z.array(WireguardOutboundFormPeerSchema).default([]),
