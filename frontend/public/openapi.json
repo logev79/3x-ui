@@ -2715,6 +2715,43 @@
         }
       }
     },
+    "/panel/api/inbounds/allLinks": {
+      "get": {
+        "tags": [
+          "Inbounds"
+        ],
+        "summary": "Return every protocol URL (vless://, vmess://, trojan://, ss://, hysteria://, mtproto) across all inbounds and all of their clients. Links are rendered through the subscription engine, so the configured remark template (name-only display part) is applied per client — the same output the client info/QR pages use. Protocols without a URL form (socks, http, mixed, wireguard, dokodemo, tunnel) contribute nothing. Used by the panel’s \"Export all inbound links\" action.",
+        "operationId": "get_panel_api_inbounds_allLinks",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "obj": [
+                    "vless://uuid@host:443?security=reality&...#Germany-alice",
+                    "vmess://eyJ2IjoyLC..."
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/panel/api/inbounds/get/{id}": {
       "get": {
         "tags": [
@@ -6574,6 +6611,55 @@
                   "success": true,
                   "obj": {
                     "affected": 5
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/panel/api/clients/groups/resetTraffic": {
+      "post": {
+        "tags": [
+          "Clients"
+        ],
+        "summary": "Reset only the group-level traffic counter shown on the groups page. Snapshots the current up/down sum of the group's members as a baseline so the group total reads zero, while leaving each client's own counters (and their quotas) untouched. No Xray restart is triggered. Creates the client_groups row if the group exists only as a derived label.",
+        "operationId": "post_panel_api_clients_groups_resetTraffic",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              },
+              "example": {
+                "name": "customer-a"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "msg": {
+                      "type": "string"
+                    },
+                    "obj": {}
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "obj": {
+                    "name": "customer-a"
                   }
                 }
               }
