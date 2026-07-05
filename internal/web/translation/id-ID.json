@@ -809,6 +809,7 @@
       "groupPlaceholder": "mis. customer-a",
       "comment": "Komentar",
       "traffic": "Lalu lintas",
+      "speed": "Kecepatan",
       "offline": "Offline",
       "addClient": "Tambah klien",
       "qrCode": "Kode QR",
@@ -2007,7 +2008,11 @@
       "startDesc": "Tampilkan menu utama",
       "helpDesc": "Bantuan bot",
       "statusDesc": "Periksa status bot",
-      "idDesc": "Tampilkan ID Telegram Anda"
+      "idDesc": "Tampilkan ID Telegram Anda",
+      "usageDesc": "Lihat pemakaian klien: /usage email",
+      "inboundDesc": "Cari inbound: /inbound nama (admin)",
+      "restartDesc": "Mulai ulang inti Xray (admin)",
+      "clearallDesc": "Reset trafik semua klien (admin)"
     },
     "messages": {
       "cpuThreshold": "Beban CPU {{ .Percent }}% melebihi batas {{ .Threshold }}%",
