@@ -525,8 +525,6 @@
         "mtprotoFakeTlsDomainHint": "Default FakeTLS domain used to generate a new client's secret. Each client can front its own domain.",
         "mtgThrottleMaxConnections": "Max connections",
         "mtgThrottleMaxConnectionsHint": "Cap concurrent connections across all users with a fair-share limit. 0 disables throttling.",
-        "mtgAdTag": "Ad-tag (sponsored channel)",
-        "mtgAdTagHint": "Optional 32-character hex tag from Telegram's proxy registration. When set, clients are routed through Telegram middle proxies and a sponsored channel appears at the top of their chat list. Requires a reachable public IP - set one below or let mtg auto-detect it.",
         "mtgAdTagInvalid": "Ad-tag must be exactly 32 hexadecimal characters.",
         "mtgPublicIpv4": "Public IPv4",
         "mtgPublicIpv6": "Public IPv6",
@@ -808,6 +806,7 @@
       "limitIpFail2banWindows": "Fail2ban is not available on Windows, so the IP limit cannot be enforced.",
       "limitIpDisabled": "The IP limit feature is disabled on this server.",
       "password": "Password",
+      "passwordDesc": "Only used by Trojan and Shadowsocks clients; ignored for VLESS, VMess, Hysteria, and WireGuard.",
       "subId": "Subscription ID",
       "online": "Online",
       "email": "Email",
@@ -908,6 +907,7 @@
       "delOrphansConfirmContent": "Removes every client that is not attached to any inbound, along with its traffic record. This cannot be undone.",
       "auth": "Auth",
       "hysteriaAuth": "Hysteria Auth",
+      "hysteriaAuthDesc": "Credential used only by Hysteria clients. Trojan and Shadowsocks use the Password field instead.",
       "uuid": "UUID",
       "flow": "Flow",
       "vmessSecurity": "VMess Security",
@@ -918,6 +918,8 @@
       "wireguardAllowedIPsHint": "Leave empty to auto-assign; separate entries with commas",
       "mtprotoSecret": "MTProto secret",
       "mtprotoSecretHint": "The client's FakeTLS secret. Regenerate to rotate it.",
+      "mtprotoAdTag": "Ad-tag (sponsored channel)",
+      "mtprotoAdTagHint": "Optional 32-character hex tag from Telegram's proxy registration. When set, this client is routed through Telegram middle proxies and a sponsored channel appears at the top of their chat list.",
       "reverseTag": "Reverse tag",
       "reverseTagPlaceholder": "Optional reverse tag",
       "telegramId": "Telegram user ID",
@@ -1014,7 +1016,7 @@
       "fields": {
         "remark": "Remark",
         "serverDescription": "Description",
-        "inbound": "Inbound",
+        "inbound": "Inbounds",
         "address": "Address",
         "port": "Port",
         "endpoint": "Endpoint",
@@ -1041,7 +1043,8 @@
         "shuffleHost": "Shuffle host",
         "tags": "Tags",
         "nodeGuids": "Nodes",
-        "excludeFromSubTypes": "Exclude from formats"
+        "excludeFromSubTypes": "Exclude from formats",
+        "inheritAddress": "Inherits"
       },
       "hints": {
         "address": "Leave blank to inherit the inbound's own address.",
@@ -1096,9 +1099,9 @@
       "toasts": {
         "list": "Failed to load hosts",
         "obtain": "Failed to load host",
-        "add": "Add host",
-        "update": "Update host",
-        "delete": "Delete host",
+        "add": "Host added successfully",
+        "update": "Host updated successfully",
+        "delete": "Host deleted successfully",
         "badTag": "Invalid tag",
         "badVlessRoute": "Enter a single number between 0 and 65535"
       }
@@ -1869,6 +1872,12 @@
         "tagPlaceholder": "unique balancer tag",
         "selector": "Selector",
         "fallback": "Fallback",
+        "fallbackBalancerHint": "Select another balancer as fallback",
+        "balancerFallbackInfo": "Traffic will be routed through: Balancer → Loopback → Server → Target Balancer → Outbound. This adds an extra hop through the server, which may introduce slight delays.",
+        "balancerFallbackCycle": "Cannot set this balancer as fallback — it would create a circular dependency.",
+        "balancerDeleteInUse": "Cannot delete this balancer — it is used as fallback by: {names}",
+        "reservedPrefix": "_bl_ prefix is reserved for internal balancer loopback objects",
+        "cycleTooltip": "Cycle: {path} → (back to {start})",
         "expected": "Expected",
         "expectedPlaceholder": "optimal node count",
         "maxRtt": "Max RTT",
@@ -1972,14 +1981,17 @@
         "dnsPresetFamily": "Family",
         "clearAll": "Delete All",
         "clearAllTitle": "Delete all DNS servers?",
-        "clearAllConfirm": "This removes every DNS server from the list. This cannot be undone."
+        "clearAllConfirm": "This removes every DNS server from the list. This cannot be undone.",
+        "dnsLeakWarning": "DNS can leak through localhost, plain UDP/TCP, local-mode DoH/DoQ, fallback queries, or EDNS client IP. Use routed DoH, hosts pins, and disable fallback when privacy matters."
       },
       "fakedns": {
         "add": "Add Fake DNS",
         "edit": "Edit Fake DNS",
         "ipPool": "IP Pool Subnet",
         "poolSize": "Pool Size"
-      }
+      },
+      "defaultOutbound": "Default Outbound",
+      "defaultOutboundDesc": "Traffic that does not match any routing rule uses this outbound (Xray uses the first outbound in the list)."
     }
   },
   "tgbot": {

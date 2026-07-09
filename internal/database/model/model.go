@@ -294,6 +294,10 @@ func (i *Inbound) GenXrayInboundConfig() *xray.InboundConfig {
 		if stripped, ok := StripVlessInboundEncryption(settings); ok {
 			settings = stripped
 		}
+	case WireGuard:
+		if converted, ok := WireguardClientsToPeers(settings); ok {
+			settings = converted
+		}
 	}
 	streamSettings := i.StreamSettings
 	if stripped, ok := StripInboundXhttpClientFields(streamSettings); ok {
@@ -337,6 +341,81 @@ func StripVmessClientSecurity(settings string) (string, bool) {
 	if !changed {
 		return settings, false
 	}
+	out, err := json.MarshalIndent(parsed, "", "  ")
+	if err != nil {
+		return settings, false
+	}
+	return string(out), true
+}
+
+// WireguardPeerFromClient builds the xray wireguard inbound peer object for one
+// WireGuard client. It is the single definition of the peer shape, shared by the
+// full-config path (XrayService.GetXrayConfig) and the live AddInbound path
+// (WireguardClientsToPeers), so both emit identical peers. The client's
+// privateKey is intentionally omitted — it is the client's secret, not part of
+// the server-side peer.
+func WireguardPeerFromClient(c Client) map[string]any {
+	peer := map[string]any{"email": c.Email, "level": 0}
+	if c.PublicKey != "" {
+		peer["publicKey"] = c.PublicKey
+	}
+	if len(c.AllowedIPs) > 0 {
+		peer["allowedIPs"] = c.AllowedIPs
+	}
+	if c.PreSharedKey != "" {
+		peer["preSharedKey"] = c.PreSharedKey
+	}
+	if c.KeepAlive > 0 {
+		peer["keepAlive"] = c.KeepAlive
+	}
+	return peer
+}
+
+// WireguardClientsToPeers rewrites a WireGuard inbound's settings JSON from the
+// panel's client representation into the peers array xray-core's wireguard
+// inbound expects. The panel stores WireGuard clients under "clients" (the shape
+// every other protocol uses); xray is configured with "peers". GetXrayConfig
+// already does this conversion when it builds the full config, but the live
+// gRPC AddInbound paths (inbound create/edit and node reconcile) go through
+// GenXrayInboundConfig directly — without the conversion they re-add the
+// wireguard inbound with no peers, dropping every connected client until the
+// next full restart. Clients are the source of truth and are always rebuilt
+// into peers (matching GetXrayConfig), so the panel's empty "peers" placeholder
+// never blocks the conversion. Idempotent: converting removes "clients", so a
+// second call is a no-op, as is any inbound that carries no "clients".
+func WireguardClientsToPeers(settings string) (string, bool) {
+	if settings == "" {
+		return settings, false
+	}
+	var parsed map[string]any
+	if err := json.Unmarshal([]byte(settings), &parsed); err != nil {
+		return settings, false
+	}
+	clients, ok := parsed["clients"].([]any)
+	if !ok {
+		return settings, false
+	}
+	peers := make([]any, 0, len(clients))
+	for _, raw := range clients {
+		cm, ok := raw.(map[string]any)
+		if !ok {
+			continue
+		}
+		if enable, ok := cm["enable"].(bool); ok && !enable {
+			continue
+		}
+		encoded, err := json.Marshal(cm)
+		if err != nil {
+			continue
+		}
+		var c Client
+		if err := json.Unmarshal(encoded, &c); err != nil {
+			continue
+		}
+		peers = append(peers, WireguardPeerFromClient(c))
+	}
+	delete(parsed, "clients")
+	parsed["peers"] = peers
 	out, err := json.MarshalIndent(parsed, "", "  ")
 	if err != nil {
 		return settings, false
@@ -456,6 +535,18 @@ func mtprotoSecretMiddle(secret string) string {
 	return mtprotoRandomMiddle()
 }
 
+// ValidMtprotoAdTag reports whether a Telegram advertising tag from
+// @MTProxybot is well-formed: exactly 16 bytes as 32 hex characters. mtg
+// refuses to start (or rejects a live update) on a malformed tag, so every
+// write path validates before the tag can reach a generated config.
+func ValidMtprotoAdTag(tag string) bool {
+	if len(tag) != 32 {
+		return false
+	}
+	_, err := hex.DecodeString(tag)
+	return err == nil
+}
+
 // StripMtprotoInboundSecret removes the vestigial inbound-level `secret` from an
 // mtproto inbound's settings JSON. MTProto is multi-client: every secret lives on
 // a client, and mtg's [secrets] config plus every share link read only the
@@ -474,6 +565,26 @@ func StripMtprotoInboundSecret(settings string) (string, bool) {
 		return settings, false
 	}
 	delete(parsed, "secret")
+	out, err := json.MarshalIndent(parsed, "", "  ")
+	if err != nil {
+		return settings, false
+	}
+	return string(out), true
+}
+
+// StripMtprotoInboundAdTag drops the dead inbound-level `adTag` — tags live on clients.
+func StripMtprotoInboundAdTag(settings string) (string, bool) {
+	if settings == "" {
+		return settings, false
+	}
+	var parsed map[string]any
+	if err := json.Unmarshal([]byte(settings), &parsed); err != nil {
+		return settings, false
+	}
+	if _, ok := parsed["adTag"]; !ok {
+		return settings, false
+	}
+	delete(parsed, "adTag")
 	out, err := json.MarshalIndent(parsed, "", "  ")
 	if err != nil {
 		return settings, false
@@ -666,6 +777,7 @@ type Client struct {
 	PreSharedKey string         `json:"preSharedKey,omitempty"`
 	KeepAlive    int            `json:"keepAlive,omitempty"`
 	Secret       string         `json:"secret,omitempty" example:"ee1234567890abcdef1234567890abcd7777772e636c6f7564666c6172652e636f6d"`
+	AdTag        string         `json:"adTag,omitempty" example:"0123456789abcdef0123456789abcdef"`
 	Email        string         `json:"email"`                        // Client email identifier
 	LimitIP      int            `json:"limitIp"`                      // IP limit for this client
 	TotalGB      int64          `json:"totalGB" form:"totalGB"`       // Total traffic limit in GB
@@ -696,6 +808,7 @@ type ClientRecord struct {
 	PreSharedKey string `json:"preSharedKey" gorm:"column:wg_pre_shared_key"`
 	KeepAlive    int    `json:"keepAlive" gorm:"column:wg_keep_alive;default:0"`
 	Secret       string `json:"secret" gorm:"column:secret"`
+	AdTag        string `json:"adTag" gorm:"column:ad_tag;default:''"`
 	LimitIP      int    `json:"limitIp" gorm:"column:limit_ip"`
 	TotalGB      int64  `json:"totalGB" gorm:"column:total_gb"`
 	ExpiryTime   int64  `json:"expiryTime" gorm:"column:expiry_time"`
@@ -800,12 +913,9 @@ type InboundFallback struct {
 
 func (InboundFallback) TableName() string { return "inbound_fallbacks" }
 
-// Host is an override endpoint attached to an inbound: at subscription time each
-// enabled host renders one share link/proxy with its own address/port/TLS/etc.,
-// superseding the legacy externalProxy array. Free-JSON fields are stored as
-// text and parsed in the sub layer; slice fields use the json serializer.
 type Host struct {
 	Id                int      `json:"id" form:"id" gorm:"primaryKey;autoIncrement" example:"1"`
+	GroupId           string   `json:"groupId" form:"groupId" gorm:"column:group_id;index"`
 	InboundId         int      `json:"inboundId" form:"inboundId" gorm:"index;not null;column:inbound_id" validate:"required" example:"1"`
 	SortOrder         int      `json:"sortOrder" form:"sortOrder" gorm:"default:0;column:sort_order"`
 	Remark            string   `json:"remark" form:"remark" validate:"required,max=256" example:"cdn-front"`
@@ -880,6 +990,7 @@ func (c *Client) ToRecord() *ClientRecord {
 		PreSharedKey: c.PreSharedKey,
 		KeepAlive:    c.KeepAlive,
 		Secret:       c.Secret,
+		AdTag:        c.AdTag,
 	}
 	if c.Reverse != nil {
 		if b, err := json.Marshal(c.Reverse); err == nil {
@@ -932,6 +1043,7 @@ func (r *ClientRecord) ToClient() *Client {
 		PreSharedKey: r.PreSharedKey,
 		KeepAlive:    r.KeepAlive,
 		Secret:       r.Secret,
+		AdTag:        r.AdTag,
 	}
 	if r.Reverse != "" {
 		var rev ClientReverse

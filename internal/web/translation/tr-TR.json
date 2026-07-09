@@ -525,8 +525,6 @@
         "mtprotoFakeTlsDomainHint": "Yeni bir istemcinin sırrını oluştururken kullanılan varsayılan FakeTLS alan adı. Her istemci kendi alan adını kullanabilir.",
         "mtgThrottleMaxConnections": "Maks. bağlantı",
         "mtgThrottleMaxConnectionsHint": "Tüm kullanıcıların eşzamanlı bağlantılarını adil paylaşımla sınırlar. 0 devre dışı bırakır.",
-        "mtgAdTag": "Reklam etiketi (sponsorlu kanal)",
-        "mtgAdTagHint": "Telegram proxy kaydından alınan isteğe bağlı 32 karakterlik onaltılık etiket. Ayarlandığında istemciler Telegram ara proxy'leri üzerinden yönlendirilir ve sohbet listelerinin en üstünde sponsorlu bir kanal görünür. Erişilebilir bir genel IP gerektirir - aşağıdan ayarlayın veya mtg'nin otomatik algılamasına izin verin.",
         "mtgAdTagInvalid": "Reklam etiketi tam olarak 32 onaltılık karakter olmalıdır.",
         "mtgPublicIpv4": "Genel IPv4",
         "mtgPublicIpv6": "Genel IPv6",
@@ -808,6 +806,7 @@
       "limitIpFail2banWindows": "Fail2ban Windows'ta kullanılamadığından IP sınırı uygulanamaz.",
       "limitIpDisabled": "IP sınırı özelliği bu sunucuda devre dışı.",
       "password": "Şifre",
+      "passwordDesc": "Yalnızca Trojan ve Shadowsocks istemcileri tarafından kullanılır; VLESS, VMess, Hysteria ve WireGuard için yok sayılır.",
       "subId": "Abonelik ID'si",
       "online": "Çevrimiçi",
       "email": "E-posta",
@@ -908,6 +907,7 @@
       "delOrphansConfirmContent": "Hiçbir gelen bağlantıya bağlı olmayan her kullanıcı, trafik kaydıyla birlikte silinir. Geri alınamaz.",
       "auth": "Auth",
       "hysteriaAuth": "Hysteria Auth",
+      "hysteriaAuthDesc": "Yalnızca Hysteria istemcilerinin kullandığı kimlik bilgisi. Trojan ve Shadowsocks bunun yerine \"Şifre\" alanını kullanır.",
       "uuid": "UUID",
       "flow": "Flow",
       "vmessSecurity": "VMess Güvenlik",
@@ -918,6 +918,8 @@
       "wireguardAllowedIPsHint": "Otomatik atama için boş bırakın; girişleri virgülle ayırın",
       "mtprotoSecret": "MTProto sırrı",
       "mtprotoSecretHint": "İstemcinin FakeTLS sırrı. Değiştirmek için yeniden oluşturun.",
+      "mtprotoAdTag": "Reklam etiketi (sponsorlu kanal)",
+      "mtprotoAdTagHint": "Telegram proxy kaydından alınan isteğe bağlı 32 karakterlik onaltılık etiket. Ayarlandığında bu istemci Telegram ara proxy'leri üzerinden yönlendirilir ve sohbet listesinin en üstünde sponsorlu bir kanal görünür.",
       "reverseTag": "Reverse Tag",
       "reverseTagPlaceholder": "İsteğe Bağlı Reverse Tag",
       "telegramId": "Telegram Kullanıcı ID'si",
@@ -1753,6 +1755,7 @@
         "tagPlaceholder": "benzersiz dengeleyici etiketi",
         "selector": "Seçici",
         "fallback": "Fallback",
+        "cycleTooltip": "Döngü: {path} → ({start} adresine geri dön)",
         "expected": "Beklenen",
         "expectedPlaceholder": "optimal düğüm sayısı",
         "maxRtt": "Maks. RTT",
@@ -1762,7 +1765,12 @@
         "balancerDesc": "Dengeleyici Etiketi (balancerTag) ve Giden Bağlantı Etiketi (outboundTag) aynı anda kullanılamaz. Aynı anda kullanıldığında yalnızca giden bağlantı etiketi geçerli olur.",
         "costMatch": "Etiket deseni",
         "costValue": "Ağırlık",
-        "costRegexp": "Düzenli ifade eşleşmesi"
+        "costRegexp": "Düzenli ifade eşleşmesi",
+        "balancerDeleteInUse": "Bu dengeleyici silinemez — şu dengeleyicilerin yedeği olarak kullanılmaktadır: {names}",
+        "balancerFallbackCycle": "Bu dengeleyiciyi yedek olarak ayarlayamazsınız — döngüsel bağımlılık oluşturur.",
+        "balancerFallbackInfo": "Trafik şu yoldan yönlendirilecektir: Dengeleyici → Loopback → Sunucu → Hedef dengeleyici → Bağlantı çıkışı. Bu, sunucu üzerinden ek bir atlama ekler ve hafif gecikmelere neden olabilir.",
+        "fallbackBalancerHint": "Yedek olarak başka bir dengeleyici seçin",
+        "reservedPrefix": " _bl_ ön eki dahili dengeleyici loopback nesneleri için ayrılmıştır"
       },
       "wireguard": {
         "secretKey": "Gizli Anahtar",
@@ -1856,14 +1864,17 @@
         "dnsPresetFamily": "Aile",
         "clearAll": "Tümünü Sil",
         "clearAllTitle": "Tüm DNS sunucularını sil?",
-        "clearAllConfirm": "Bu işlem tüm DNS sunucularını listeden kaldırır. Geri alınamaz."
+        "clearAllConfirm": "Bu işlem tüm DNS sunucularını listeden kaldırır. Geri alınamaz.",
+        "dnsLeakWarning": "DNS; localhost, düz UDP/TCP, yerel mod DoH/DoQ, fallback sorguları veya EDNS client IP üzerinden sızabilir. Gizlilik önemliyse yönlendirilmiş DoH, hosts sabitlemeleri ve kapalı fallback kullanın."
       },
       "fakedns": {
         "add": "Sahte DNS Ekle",
         "edit": "Sahte DNS'i Düzenle",
         "ipPool": "IP Havuzu Alt Ağı",
         "poolSize": "Havuz Boyutu"
-      }
+      },
+      "defaultOutbound": "Varsayılan giden",
+      "defaultOutboundDesc": "Yönlendirme kuralıyla eşleşmeyen trafik bu gideni kullanır (listedeki ilk giden)."
     },
     "hosts": {
       "addHost": "Host Ekle",
@@ -1892,7 +1903,7 @@
       "fields": {
         "remark": "Açıklama",
         "serverDescription": "Tanım",
-        "inbound": "Gelen Bağlantı",
+        "inbound": "Gelen Bağlantılar",
         "address": "Adres",
         "port": "Port",
         "endpoint": "Uç Nokta",
@@ -1919,7 +1930,8 @@
         "tags": "Etiketler",
         "nodeGuids": "Düğümler",
         "excludeFromSubTypes": "Formatlardan hariç tut",
-        "verifyPeerCertByName": "Peer sertifikasını ada göre doğrula"
+        "verifyPeerCertByName": "Peer sertifikasını ada göre doğrula",
+        "inheritAddress": "Adresi devralır"
       },
       "hints": {
         "address": "Gelen bağlantının kendi adresini devralmak için boş bırakın.",

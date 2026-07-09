@@ -240,6 +240,7 @@ export const ApiTokenViewSchema = z.object({
 export type ApiTokenView = z.infer<typeof ApiTokenViewSchema>;
 
 export const ClientSchema = z.object({
+  adTag: z.string().optional(),
   allowedIPs: z.array(z.string()).optional(),
   auth: z.string().optional(),
   comment: z.string(),
@@ -276,6 +277,7 @@ export const ClientInboundSchema = z.object({
 export type ClientInbound = z.infer<typeof ClientInboundSchema>;
 
 export const ClientRecordSchema = z.object({
+  adTag: z.string(),
   allowedIPs: z.string(),
   auth: z.string(),
   comment: z.string(),
@@ -346,6 +348,7 @@ export const HostSchema = z.object({
   excludeFromSubTypes: z.array(z.string()),
   finalMask: z.string(),
   fingerprint: z.string(),
+  groupId: z.string(),
   hostHeader: z.string(),
   id: z.number().int(),
   inboundId: z.number().int(),
@@ -373,6 +376,41 @@ export const HostSchema = z.object({
   vlessRoute: z.string(),
 });
 export type Host = z.infer<typeof HostSchema>;
+
+export const HostGroupSchema = z.object({
+  allowInsecure: z.boolean(),
+  alpn: z.array(z.string()),
+  echConfigList: z.string(),
+  excludeFromSubTypes: z.array(z.string()),
+  finalMask: z.string(),
+  fingerprint: z.string(),
+  groupId: z.string(),
+  hostHeader: z.string(),
+  hosts: z.array(z.string()),
+  inboundIds: z.array(z.number().int()),
+  isDisabled: z.boolean(),
+  isHidden: z.boolean(),
+  keepSniBlank: z.boolean(),
+  mihomoIpVersion: z.enum(['dual', 'ipv4', 'ipv6', 'ipv4-prefer', 'ipv6-prefer']),
+  mihomoX25519: z.boolean(),
+  muxParams: z.string(),
+  nodeGuids: z.array(z.string()),
+  overrideSniFromAddress: z.boolean(),
+  path: z.string(),
+  pinnedPeerCertSha256: z.array(z.string()),
+  port: z.number().int().min(0).max(65535),
+  remark: z.string().max(256),
+  security: z.enum(['same', 'tls', 'none', 'reality']),
+  serverDescription: z.string().max(64),
+  shuffleHost: z.boolean(),
+  sni: z.string(),
+  sockoptParams: z.string(),
+  sortOrder: z.number().int(),
+  tags: z.array(z.string()),
+  verifyPeerCertByName: z.string(),
+  vlessRoute: z.string(),
+});
+export type HostGroup = z.infer<typeof HostGroupSchema>;
 
 export const InboundSchema = z.object({
   clientStats: z.array(z.lazy(() => ClientTrafficSchema)),
