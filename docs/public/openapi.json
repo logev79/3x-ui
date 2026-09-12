@@ -2492,6 +2492,39 @@
         ],
         "type": "object"
       },
+      "HwidSlotStatus": {
+        "description": "HwidSlotStatus is the aggregate device-slot view exposed to subscribers:\ncounters only, no hwid value or hash, no email, no device metadata.",
+        "properties": {
+          "active": {
+            "example": true,
+            "type": "boolean"
+          },
+          "full": {
+            "example": false,
+            "type": "boolean"
+          },
+          "limit": {
+            "example": 2,
+            "type": "integer"
+          },
+          "registered": {
+            "example": 1,
+            "type": "integer"
+          },
+          "remaining": {
+            "example": 1,
+            "type": "integer"
+          }
+        },
+        "required": [
+          "active",
+          "full",
+          "limit",
+          "registered",
+          "remaining"
+        ],
+        "type": "object"
+      },
       "Inbound": {
         "description": "Inbound represents an Xray inbound configuration with traffic statistics and settings.",
         "properties": {
@@ -2571,7 +2604,8 @@
               "tunnel",
               "tun",
               "mtproto",
-              "amneziawg"
+              "amneziawg",
+              "tuic"
             ],
             "example": "vless",
             "type": "string"
@@ -2596,9 +2630,8 @@
           "sniffing": {},
           "streamSettings": {},
           "subSortIndex": {
-            "description": "1-based sort order of this inbound's links in subscription output only (lower first; ties by id)",
+            "description": "Sort order of this inbound's links in subscription output only (lower first; negatives allowed; 0/omitted → 1; ties by id)",
             "example": 1,
-            "minimum": 1,
             "type": "integer"
           },
           "tag": {
@@ -2789,6 +2822,14 @@
           "tlsFlowCapable": {
             "example": true,
             "type": "boolean"
+          },
+          "tuicServer": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TuicServerSettings"
+              }
+            ],
+            "nullable": true
           },
           "wgDns": {
             "type": "string"
@@ -3668,6 +3709,11 @@
             "example": "h2",
             "type": "string"
           },
+          "certChainBytes": {
+            "description": "CertChainBytes is the sum of DER lengths of the presented peer chain.\nxray-core ML-DSA-65 REALITY needs >= 3500 bytes (constant lives in xray-core).",
+            "example": 3427,
+            "type": "integer"
+          },
           "certChainValid": {
             "description": "CertChainValid ignores the name: a trusted chain presented for other names\nstill has serverNames the panel can offer instead of the failing SNI.",
             "example": true,
@@ -3750,6 +3796,7 @@
         },
         "required": [
           "alpn",
+          "certChainBytes",
           "certChainValid",
           "certIssuer",
           "certSubject",
@@ -4040,6 +4087,78 @@
           "IsOutbound",
           "Tag",
           "Up"
+        ],
+        "type": "object"
+      },
+      "TuicClientSettings": {
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          },
+          "uuid": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "password",
+          "uuid"
+        ],
+        "type": "object"
+      },
+      "TuicServerSettings": {
+        "properties": {
+          "alpn": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "authentication_timeout": {
+            "type": "integer"
+          },
+          "certificate": {
+            "type": "string"
+          },
+          "congestion_control": {
+            "type": "string"
+          },
+          "log_level": {
+            "type": "string"
+          },
+          "max_idle_time": {
+            "type": "integer"
+          },
+          "max_udp_relay_packet_size": {
+            "type": "integer"
+          },
+          "private_key": {
+            "type": "string"
+          },
+          "sni": {
+            "type": "string"
+          },
+          "udp_relay_mode": {
+            "type": "string"
+          },
+          "zero_rtt_handshake": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "alpn",
+          "authentication_timeout",
+          "certificate",
+          "congestion_control",
+          "log_level",
+          "max_idle_time",
+          "max_udp_relay_packet_size",
+          "private_key",
+          "udp_relay_mode",
+          "zero_rtt_handshake"
         ],
         "type": "object"
       },
@@ -4535,6 +4654,7 @@
                       "ssMethod": "",
                       "tag": "in-443-tcp",
                       "tlsFlowCapable": true,
+                      "tuicServer": null,
                       "wgDns": "",
                       "wgMtu": 0,
                       "wgPublicKey": ""
@@ -7125,6 +7245,7 @@
                   "success": true,
                   "obj": {
                     "alpn": "h2",
+                    "certChainBytes": 3427,
                     "certChainValid": true,
                     "certIssuer": "Google Trust Services",
                     "certSubject": "cloudflare.com",
@@ -7204,6 +7325,7 @@
                   "obj": [
                     {
                       "alpn": "h2",
+                      "certChainBytes": 3427,
                       "certChainValid": true,
                       "certIssuer": "Google Trust Services",
                       "certSubject": "cloudflare.com",
@@ -9489,7 +9611,7 @@
         "tags": [
           "Clients"
         ],
-        "summary": "List registered HWID devices for a client. Hashes are not exposed.",
+        "summary": "List registered HWID devices for a client with a short fingerprint. Full hashes are not exposed.",
         "operationId": "post_panel_api_clients_hwids_email",
         "parameters": [
           {
@@ -9529,7 +9651,8 @@
                       "userAgent": "Happ/1.0",
                       "deviceOs": "android",
                       "osVersion": "15",
-                      "deviceModel": "Pixel 9"
+                      "deviceModel": "Pixel 9",
+                      "fingerprint": "6ad17c93e821"
                     }
                   ]
                 }
@@ -13536,6 +13659,11 @@
                     "type": "string",
                     "description": "Prefix for generated outbound tags. Defaults to the lowest free \"sub<N>-\" prefix."
                   },
+                  "userAgent": {
+                    "type": "string",
+                    "default": "3x-ui-outbound-sub/1.0",
+                    "description": "Custom User-Agent sent when fetching this subscription. Defaults to \"3x-ui-outbound-sub/1.0\"."
+                  },
                   "updateInterval": {
                     "type": "integer",
                     "default": 600,
@@ -13628,6 +13756,11 @@
                   "tagPrefix": {
                     "type": "string",
                     "description": "Prefix for generated outbound tags. Defaults to the lowest free \"sub<N>-\" prefix."
+                  },
+                  "userAgent": {
+                    "type": "string",
+                    "default": "3x-ui-outbound-sub/1.0",
+                    "description": "Custom User-Agent sent when fetching this subscription. Defaults to \"3x-ui-outbound-sub/1.0\"."
                   },
                   "updateInterval": {
                     "type": "integer",
@@ -13880,6 +14013,10 @@
                   "url": {
                     "type": "string",
                     "description": "Subscription URL to preview (required)."
+                  },
+                  "userAgent": {
+                    "type": "string",
+                    "description": "Custom User-Agent sent while fetching the preview."
                   },
                   "allowPrivate": {
                     "type": "boolean",
@@ -14400,6 +14537,99 @@
           },
           "500": {
             "description": "Subscription generation failed."
+          }
+        }
+      }
+    },
+    "/{subPath}{subid}/hwid-status": {
+      "get": {
+        "tags": [
+          "Subscription Server"
+        ],
+        "summary": "Return aggregate HWID device-slot usage for the subscription: whether an HWID limit is active, the limit, how many devices are registered and how many slots remain. Read-only — it never registers a device, so asking does not consume a slot. Counters only: no HWID value, email or device metadata. The path prefix is configured by subPath.",
+        "operationId": "get_subPath_subid_hwid_status",
+        "description": "Responds with the bare HwidSlotStatus object, not the <code>{success,msg,obj}</code> panel envelope, like the other subscription-server routes. With no HWID limit configured, <code>active</code> is false and every counter is 0.",
+        "parameters": [
+          {
+            "name": "subid",
+            "in": "path",
+            "required": true,
+            "description": "Client subscription ID.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "subPath",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Device-slot counters for the subscription.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "active": true,
+                  "full": false,
+                  "limit": 2,
+                  "registered": 1,
+                  "remaining": 1
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/HwidSlotStatus"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No enabled client matches the subscription ID. Empty body."
+          },
+          "500": {
+            "description": "Database lookup failed. Empty body."
+          }
+        }
+      },
+      "head": {
+        "tags": [
+          "Subscription Server"
+        ],
+        "summary": "Return the HWID device-slot status code and headers as GET without a response body.",
+        "operationId": "head_subPath_subid_hwid_status",
+        "parameters": [
+          {
+            "name": "subid",
+            "in": "path",
+            "required": true,
+            "description": "Client subscription ID.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "subPath",
+            "in": "path",
+            "required": true,
+            "description": "",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Headers match GET; no response body."
+          },
+          "404": {
+            "description": "No enabled client matches the subscription ID. Empty body."
+          },
+          "500": {
+            "description": "Database lookup failed. Empty body."
           }
         }
       }
